@@ -83,15 +83,39 @@ def loading_training_csv_tables():
     }
     return result
 
-#function to load testing data and clean month column
-def loading_test_csv():
-    """
-    This function loads the test csv files and cleand the month column
-    """
-    test = clean_read_csv("test.csv")
-    test["month"] = get_month(test["month"])
+#function to build balanced data, filling missing values with 0
+def build_clean_data(new_houses):
+    new_house = new_houses.copy()
+    sectors = new_house["sector"].unique()
+    monmin, monmax = new_house["month"].min(), new_house["month"].max()
+    months = pd.date_range(start=monmin, end=monmax, freq="M").to_timestamp()
 
-    return test
+    panel = pd.MultiIndex.from_product([sectors, months], names=["sector", "month"]).to_frame(index=False)
 
-train_dat = loading_training_csv_tables()
-test_dat = loading_test_csv()
+    keep_cols = [
+        "month", "sector",
+        "num_new_house_transactions",
+        "area_new_house_transactions",
+        "price_new_house_transactions",
+        "amount_new_house_transactions",
+        "area_per_unit_new_house_transactions",
+        "total_price_per_unit_new_house_transactions",
+        "num_new_house_available_for_sale",
+        "area_new_house_available_for_sale",
+        "period_new_house_sell_through"
+    ]
+
+    new_house_small = new_house[[c for c in keep_cols if c in new_house.columns]].copy()
+    df = panel.merge(new_house_small, on="month", how="left")
+    df["amount_new_house_transactions"] = df["amount_new_house_transactions"].fillna(0)
+
+    return df
+
+def merge_features(panel, tables):
+    df = panel.copy()
+
+#main function
+def main():
+    """
+    Main function doing all the work
+    """
