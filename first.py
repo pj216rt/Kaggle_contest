@@ -50,3 +50,13 @@ def loading_training_csv_tables():
     #csv for land transactions
     land = clean_read_csv("train/land_transactions.csv")
     land["month"] = get_month(land["month"])
+
+    #nearby land transactions
+    land_near = clean_read_csv("train/land_transactions_nearby_sectors.csv")
+    land_near["month"] = get_month(land_near["month"])
+
+    #city data
+    city_idx = clean_read_csv("train/city_names.csv")
+
+    #city search index
+    city_search_idx = clean_read_csv("train/city_search_index.csv")
