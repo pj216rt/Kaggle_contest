@@ -24,6 +24,7 @@ def get_month(date_col):
     #may need to add error checking here
     return s.dt.to_period("M").dt.to_timestamp()
 
+#function to load training data and clean month column
 def loading_training_csv_tables():
     """
     This function loads the training csv files into a pandas dataframe, modifying the column names
@@ -56,7 +57,41 @@ def loading_training_csv_tables():
     land_near["month"] = get_month(land_near["month"])
 
     #city data
-    city_idx = clean_read_csv("train/city_names.csv")
+    city_idx = clean_read_csv("train/city_indexes.csv")
 
     #city search index
     city_search_idx = clean_read_csv("train/city_search_index.csv")
+    city_search_idx["month"] = get_month(city_search_idx["month"])
+    #group data by month, add up search volume across all keywords and sources
+    #rename the columns to illustrate total monthly search volume
+    search_monthly = (
+        city_search_idx.groupby("month", as_index=False)["search_volume"]
+        .sum()
+        .rename(columns={"search_volume": "search_volume_total"})
+    )
+
+    result = {
+        "new_house": new_house_trans,
+        "new_house_nb": new_house_trans_near,
+        "pre_owned": preowned_house_trans,
+        "pre_owned_nb": preowned_house_trans_near,
+        "land": land,
+        "land_nb": land_near,
+        "poi": poi,
+        "city_idx": city_idx,
+        "search_monthly": search_monthly
+    }
+    return result
+
+#function to load testing data and clean month column
+def loading_test_csv():
+    """
+    This function loads the test csv files and cleand the month column
+    """
+    test = clean_read_csv("test.csv")
+    test["month"] = get_month(test["month"])
+
+    return test
+
+train_dat = loading_training_csv_tables()
+test_dat = loading_test_csv()
